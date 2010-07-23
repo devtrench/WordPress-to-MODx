@@ -1,0 +1,8 @@
+core/cache/
+core/components/
+core/config/
+core/error/
+core/lexicon/
+core/packages/
+core/xpdo/
+core/model/modx/

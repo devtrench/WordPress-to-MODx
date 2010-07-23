@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model package="wordpress" baseClass="xPDOObject" platform="mysql" defaultEngine="MyISAM">
+
+  <object class="Comments" table="comments" extends="xPDOObject">
+		<field key="comment_ID" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="comment_post_ID" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
+		<field key="comment_author" dbtype="tinytext" phptype="string" null="false" />
+		<field key="comment_author_email" dbtype="varchar" precision="100" phptype="string" null="false" default="" />
+		<field key="comment_author_url" dbtype="varchar" precision="200" phptype="string" null="false" default="" />
+		<field key="comment_author_IP" dbtype="varchar" precision="100" phptype="string" null="false" default="" />
+		<field key="comment_date" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" />
+		<field key="comment_date_gmt" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" index="index" />
+		<field key="comment_content" dbtype="text" phptype="string" null="false" />
+		<field key="comment_karma" dbtype="int" precision="11" phptype="integer" null="false" default="0" />
+		<field key="comment_approved" dbtype="varchar" precision="20" phptype="string" null="false" default="1" index="index" />
+		<field key="comment_agent" dbtype="varchar" precision="255" phptype="string" null="false" default="" />
+		<field key="comment_type" dbtype="varchar" precision="20" phptype="string" null="false" default="" />
+		<field key="comment_parent" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" />
+		<field key="user_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" />
+		<field key="comment_subscribe" dbtype="enum" precision="'Y','N'" phptype="string" null="false" default="N" />
+    <aggregate alias="Users" class="Users" local="user_id" foreign="ID" cardinality="one" owner="foreign" />
+  </object>
+
+	<object class="Options" table="options" extends="xPDOObject">
+		<field key="option_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="blog_id" dbtype="int" precision="11" phptype="integer" null="false" default="0" />
+		<field key="option_name" dbtype="varchar" precision="64" phptype="string" null="false" default="" index="unique" />
+		<field key="option_value" dbtype="longtext" phptype="string" null="false" />
+		<field key="autoload" dbtype="varchar" precision="20" phptype="string" null="false" default="yes" />
+	</object>
+
+  <object class="Postmeta" table="postmeta" extends="xPDOObject">
+		<field key="meta_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="post_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
+		<field key="meta_key" dbtype="varchar" precision="255" phptype="string" null="true" index="index" />
+		<field key="meta_value" dbtype="longtext" phptype="string" null="true" />
+	</object>
+
+  <object class="Posts" table="posts" extends="xPDOObject">
+		<field key="ID" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="post_author" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" />
+		<field key="post_date" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" />
+		<field key="post_date_gmt" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" />
+		<field key="post_content" dbtype="longtext" phptype="string" null="false" />
+		<field key="post_title" dbtype="text" phptype="string" null="false" />
+		<field key="post_category" dbtype="int" precision="4" phptype="integer" null="false" default="0" />
+		<field key="post_excerpt" dbtype="text" phptype="string" null="false" />
+		<field key="post_status" dbtype="varchar" precision="20" phptype="string" null="false" default="publish" index="index" />
+		<field key="comment_status" dbtype="varchar" precision="20" phptype="string" null="false" default="open" />
+		<field key="ping_status" dbtype="varchar" precision="20" phptype="string" null="false" default="open" />
+		<field key="post_password" dbtype="varchar" precision="20" phptype="string" null="false" default="" />
+		<field key="post_name" dbtype="varchar" precision="200" phptype="string" null="false" default="" index="index" />
+		<field key="to_ping" dbtype="text" phptype="string" null="false" />
+		<field key="pinged" dbtype="text" phptype="string" null="false" />
+		<field key="post_modified" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" />
+		<field key="post_modified_gmt" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" />
+		<field key="post_content_filtered" dbtype="text" phptype="string" null="false" />
+		<field key="post_parent" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
+		<field key="guid" dbtype="varchar" precision="255" phptype="string" null="false" default="" />
+		<field key="menu_order" dbtype="int" precision="11" phptype="integer" null="false" default="0" />
+		<field key="post_type" dbtype="varchar" precision="20" phptype="string" null="false" default="post" index="index" />
+		<field key="post_mime_type" dbtype="varchar" precision="100" phptype="string" null="false" default="" />
+		<field key="comment_count" dbtype="bigint" precision="20" phptype="integer" null="false" default="0" />
+    <aggregate alias="Users" class="Users" local="post_author" foreign="ID" cardinality="one" owner="foreign" />
+    <composite alias="Comments" class="Comments" local="ID" foreign="comment_post_ID" cardinality="many" owner="local" />
+    <composite alias="PostMeta" class="Postmeta" local="ID" foreign="post_id" cardinality="many" owner="local" />
+    <composite alias="TermRelationships" class="TermRelationships" local="ID" foreign="object_id" cardinality="many" owner="local" />
+	</object>
+
+  <object class="TermRelationships" table="term_relationships" extends="xPDOObject">
+		<field key="object_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="pk" />
+		<field key="term_taxonomy_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="pk" />
+		<field key="term_order" dbtype="int" precision="11" phptype="integer" null="false" default="0" />
+	  <composite alias="TermTaxonomys" class="TermTaxonomy" local="term_taxonomy_id" foreign="term_taxonomy_id" cardinality="many" owner="local" />
+	  <aggregate alias="Post" class="Posts" local="object_id" foreign="ID" cardinality="one" owner="foreign" />
+  </object>
+
+  <object class="TermTaxonomy" table="term_taxonomy" extends="xPDOObject">
+		<field key="term_taxonomy_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="term_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
+		<field key="taxonomy" dbtype="varchar" precision="32" phptype="string" null="false" default="" index="index" />
+		<field key="description" dbtype="longtext" phptype="string" null="false" />
+		<field key="parent" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" />
+		<field key="count" dbtype="bigint" precision="20" phptype="integer" null="false" default="0" />
+    <aggregate alias="Terms" class="Terms" local="term_id" foreign="term_id" cardinality="one" owner="foriegn" />
+    <aggregate alias="TermRelationship" class="TermRelationships" local="term_taxonomy_id" foreign="term_taxonomy_id" cardinality="one" owner="foreign" />
+	</object>
+
+  <object class="Terms" table="terms" extends="xPDOObject">
+		<field key="term_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="name" dbtype="varchar" precision="200" phptype="string" null="false" default="" index="index" />
+		<field key="slug" dbtype="varchar" precision="200" phptype="string" null="false" default="" index="unique" />
+		<field key="term_group" dbtype="bigint" precision="10" phptype="integer" null="false" default="0" />
+    <composite alias="TermTaxonomy" class="TermTaxonomy" local="term_id" foreign="term_id" cardinality="many" owner="local" />
+  </object>
+
+  <object class="Usermeta" table="usermeta" extends="xPDOObject">
+		<field key="umeta_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="user_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
+		<field key="meta_key" dbtype="varchar" precision="255" phptype="string" null="true" index="index" />
+		<field key="meta_value" dbtype="longtext" phptype="string" null="true" />
+	</object>
+
+  <object class="Users" table="users" extends="xPDOObject">
+		<field key="ID" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" index="pk"  generated="native" />
+		<field key="user_login" dbtype="varchar" precision="60" phptype="string" null="false" default="" index="unique" />
+		<field key="user_pass" dbtype="varchar" precision="64" phptype="string" null="false" default="" />
+		<field key="user_nicename" dbtype="varchar" precision="50" phptype="string" null="false" default="" index="index" />
+		<field key="user_email" dbtype="varchar" precision="100" phptype="string" null="false" default="" />
+		<field key="user_url" dbtype="varchar" precision="100" phptype="string" null="false" default="" />
+		<field key="user_registered" dbtype="datetime" phptype="datetime" null="false" default="0000-00-00 00:00:00" />
+		<field key="user_activation_key" dbtype="varchar" precision="60" phptype="string" null="false" default="" />
+		<field key="user_status" dbtype="int" precision="11" phptype="integer" null="false" default="0" />
+		<field key="display_name" dbtype="varchar" precision="250" phptype="string" null="false" default="" />
+    <composite alias="Usermeta" class="Usermeta" local="ID" foreign="user_id" cardinality="many" owner="local" />
+	</object>
