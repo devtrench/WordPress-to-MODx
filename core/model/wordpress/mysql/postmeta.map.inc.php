@@ -46,4 +46,15 @@ $xpdo_meta_map['Postmeta']= array (
       'null' => true,
     ),
   ),
+  'aggregates' => 
+  array (
+    'Posts' => 
+    array (
+      'class' => 'Posts',
+      'local' => 'post_id',
+      'foreign' => 'ID',
+      'cardinality' => 'one',
+      'owner' => 'foreign',
+    ),
+  ),
 );

@@ -34,6 +34,7 @@
 		<field key="post_id" dbtype="bigint" precision="20" attributes="unsigned" phptype="integer" null="false" default="0" index="index" />
 		<field key="meta_key" dbtype="varchar" precision="255" phptype="string" null="true" index="index" />
 		<field key="meta_value" dbtype="longtext" phptype="string" null="true" />
+    <aggregate alias="Posts" class="Posts" local="post_id" foreign="ID" cardinality="one" owner="foreign" />
 	</object>
 
   <object class="Posts" table="posts" extends="xPDOObject">
