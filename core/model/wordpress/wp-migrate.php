@@ -65,7 +65,7 @@ $can_migrate = true;
  */
 $wp_database_host     = 'localhost';
 $wp_database_charset  = 'utf-8';
-$wp_database_name     = 'wordpress_devtrench';
+$wp_database_name     = 'wordpress';
 $wp_database_prefix   = 'wp_';
 $wp_database_username = 'root';
 $wp_database_password = '';
