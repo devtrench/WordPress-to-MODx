@@ -168,10 +168,9 @@ if($empty_tables)
   }
   $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_content'));
   $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_templates') . 'WHERE id != 1');
-  $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_templvars') . "WHERE name != '$categories_tv'");
-  $tv = $modx->getObject('modTemplateVar',array('name'=>$categories_tv));
-  if($tv) $tv->remove();
-  $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_templvars_contentvalues') . "WHERE tmplvarid == " . $tv->get('id'));
+  $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_tmplvars'));
+  $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_tmplvar_contentvalues'));
+  $modx->db->query('TRUNCATE ' . $modx->getFullTableName('site_tmplvar_templates'));
 }
 
 // first set up the document parents
@@ -193,6 +192,7 @@ if (!empty($post_template_id))
 if (!empty($page_template_id))
   $templates['page'] = $page_template_id;
 
+
 // now check that the templates exist
 foreach($templates as $template_name => $template_id)
 {
@@ -210,8 +210,10 @@ foreach($templates as $template_name => $template_id)
   }
 }
 
+
+
 // now add the category TV
-if(!empty($categories_tv) && !$category_tv = $modx->getObject('modTemplateVar',array('name'=>$categories_tv)))
+if(!empty($categories_tv) && is_null($category_tv = $modx->getObject('modTemplateVar',array('name'=>$categories_tv))))
 {
   $category_tv = $modx->newObject('modTemplateVar');
   $data = array(
@@ -236,6 +238,8 @@ if(!empty($categories_tv) && !$category_tv = $modx->getObject('modTemplateVar',a
   }
 }
 
+
+
 // set up all wp postmeta options up as template variables
 $criteria = $wp->newQuery('Postmeta');
 $criteria->groupby('meta_key');
@@ -254,7 +258,8 @@ foreach ($postmetas as $meta)
   $meta_tv->fromArray($data);
   $meta_tv->save();
   $meta_tv_id = $meta_tv->get('id');
-
+  $meta_tv_ids[$meta->get('meta_key')] = $meta_tv->get('id');
+ 
   // link the postmeta tvs to the templates
   foreach($templates as $template_name => $template_id)
   {
@@ -276,7 +281,7 @@ $post_count = 0;
 $comment_count = 0;
 
 /**
- * post and page migration
+ * post and page migration -----------------------------------------------------
  *
  * iterate over each post and create a new modResource object, mapping our post
  * fields to our wordpress fields
@@ -321,6 +326,7 @@ foreach($posts as $post)
             'published'=> ($post->get('post_status') == 'publish') ? 1 : 0,
             'pub_date'=> ($post->get('post_status') == 'publish') ? $post->get('post_date') : 0,
             'parent' => $parent,
+            'richtext'=>0,
             'template'=> (empty($template_id)) ? $default_template_id : $template_id,
     );
     $resource->fromArray($data,'',true);
@@ -332,7 +338,7 @@ foreach($posts as $post)
   }
 
   /**
-   * categories migration
+   * categories migration ------------------------------------------------------
    *
    * categories use a template variable to store categories.  This is a tag
    * based structure combines wordpress categories and tags into one field
@@ -343,7 +349,7 @@ foreach($posts as $post)
     $term_taxonomies = array();
     $terms = array();
 
-    $term_relationsips = $post->getMany('TermRelationship');
+    $term_relationsips = $post->getMany('TermRelationships');
     if (!is_array($term_relationsips)) continue;
 
     foreach($term_relationsips as $tr)
@@ -372,7 +378,28 @@ foreach($posts as $post)
   }
 
   /**
-   * comment migration
+   * post meta migration -------------------------------------------------------
+   */
+  $postmetas = '';
+  $criteria = $wp->newQuery('Postmeta');
+    $criteria->where(array(
+            'post_id' => $post->get('ID'),
+    ));
+  $postmetas = $wp->getCollection('Postmeta',$criteria);
+  if (is_array($postmetas))
+  {
+    foreach($postmetas as $meta)
+    {
+      $tv = $modx->newObject('modTemplateVarResource');
+      $tv->set('tmplvarid',$meta_tv_ids[$meta->get('meta_key')]);
+      $tv->set('contentid',$res_id);
+      $tv->set('value',$meta->get('meta_value'));
+      $tv->save();
+    }
+  }
+
+  /**
+   * comment migration ---------------------------------------------------------
    *
    * comments are handled by quip - so you must have that package installed
    * in order to import comments
@@ -414,9 +441,13 @@ foreach($posts as $post)
   }
 }
 
-// Processing is now finished. Echo the number of posts inserted.
+/**
+ * Processing is now finished. Echo the number of posts inserted.
+ */
 echo $post_count . ' post' . (($post_count == 1) ? '' : 's') . ' added. ' . $comment_count . ' comment' . (($comment_count == 1) ? '' : 's') . " added.\n";
 echo "If you are done with migrating posts you should remove this file or set \$can_migrate to false so this page can't be executed in the future.\n";
+
+
 
 
 /**
