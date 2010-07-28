@@ -37,8 +37,6 @@ ini_set('max_execution_time',120);
  * @license http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
  *
  * @todo figure out post authors - add WP users as MODx users, not sure what to do about passwords if more than md5 is used
- * @todo add all post meta options as template variables and associate data with them
- * @todo import to github and specify what features this release has and roadmap future releases
  * @todo add categories for migrated content
  * @todo test on fresh install
  *
