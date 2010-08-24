@@ -1,7 +1,4 @@
 <?php
-
-ini_set('max_execution_time',120);
-
 /**
  * xPDO Wordpress to MODx Migration Code
  * Author James Ehly (devtrench.com)
@@ -35,10 +32,6 @@ ini_set('max_execution_time',120);
  * @author James Ehly <james@devtrench.com>
  * @copyright Copyright 2010, James Ehly
  * @license http://opensource.org/licenses/gpl-2.0.php GNU Public License v2
- *
- * @todo figure out post authors - add WP users as MODx users, not sure what to do about passwords if more than md5 is used
- * @todo add categories for migrated content
- * @todo test on fresh install
  *
  */
 
@@ -76,8 +69,8 @@ $wp_database_password = '';
  * must be set.
  */
 $default_template_id = 1;
-$post_template_id = 4;
-$page_template_id = 5;
+$post_template_id = 2;
+$page_template_id = 3;
 
 /**
  * $post_document_parent
@@ -94,6 +87,7 @@ $post_document_parent = array(
         'alias'=>'blog',
         'published'=>1,
         'template'=>$default_template_id,
+        'isfolder'=>1,
         'context_key'=>'web');
 
 /**
@@ -151,7 +145,6 @@ $can_migrate_wp = $wp->addPackage('wordpress','../',$wp_database_prefix);
 
 if (!$can_migrate_wp) die('Wordpress Package could not be loaded.');
 
-
 /**
  * during migrations where you need to try, try and try again to get it right,
  * it's easier to truncate the tables here instead of doing it manually.
@@ -190,7 +183,6 @@ if (!empty($post_template_id))
 if (!empty($page_template_id))
   $templates['page'] = $page_template_id;
 
-
 // now check that the templates exist
 foreach($templates as $template_name => $template_id)
 {
@@ -208,19 +200,21 @@ foreach($templates as $template_name => $template_id)
   }
 }
 
-
-
 // now add the category TV
-if(!empty($categories_tv) && is_null($category_tv = $modx->getObject('modTemplateVar',array('name'=>$categories_tv))))
+if(!empty($categories_tv))
 {
-  $category_tv = $modx->newObject('modTemplateVar');
-  $data = array(
-          'name' => $categories_tv,
-          'caption' => $categories_tv,
-          'type' => 'text',
-  );
-  $category_tv->fromArray($data);
-  $category_tv->save();
+  if (is_null($category_tv = $modx->getObject('modTemplateVar',array('name'=>$categories_tv))))
+  {
+    $category_tv = $modx->newObject('modTemplateVar');
+    $data = array(
+            'name' => $categories_tv,
+            'caption' => $categories_tv,
+            'type' => 'text',
+    );
+    $category_tv->fromArray($data);
+    $category_tv->save();
+  }
+
   $category_tv_id = $category_tv->get('id');
 
   foreach($templates as $template_name => $template_id)
@@ -235,8 +229,6 @@ if(!empty($categories_tv) && is_null($category_tv = $modx->getObject('modTemplat
     }
   }
 }
-
-
 
 // set up all wp postmeta options up as template variables
 $criteria = $wp->newQuery('Postmeta');
@@ -257,7 +249,7 @@ foreach ($postmetas as $meta)
   $meta_tv->save();
   $meta_tv_id = $meta_tv->get('id');
   $meta_tv_ids[$meta->get('meta_key')] = $meta_tv->get('id');
- 
+
   // link the postmeta tvs to the templates
   foreach($templates as $template_name => $template_id)
   {
@@ -323,6 +315,7 @@ foreach($posts as $post)
             'alias'=>$post->get('post_name'),
             'published'=> ($post->get('post_status') == 'publish') ? 1 : 0,
             'pub_date'=> ($post->get('post_status') == 'publish') ? $post->get('post_date') : 0,
+            'publishedon'=> ($post->get('post_status') == 'publish') ? $post->get('post_date') : 0,
             'parent' => $parent,
             'richtext'=>0,
             'template'=> (empty($template_id)) ? $default_template_id : $template_id,
@@ -372,7 +365,6 @@ foreach($posts as $post)
       $tv->set('value',$terms);
       $tv->save();
     }
-
   }
 
   /**
@@ -380,9 +372,9 @@ foreach($posts as $post)
    */
   $postmetas = '';
   $criteria = $wp->newQuery('Postmeta');
-    $criteria->where(array(
-            'post_id' => $post->get('ID'),
-    ));
+  $criteria->where(array(
+          'post_id' => $post->get('ID'),
+  ));
   $postmetas = $wp->getCollection('Postmeta',$criteria);
   if (is_array($postmetas))
   {
@@ -482,10 +474,10 @@ function setupParent($parent, $type='Undefined')
   {
     if (is_int($parent))
       $parent = array(
-        'id'=>$parent,
-        'pagetitle'=>$type . ' Container',
-        'published'=>1,
-        'context_key'=>'web'
+              'id'=>$parent,
+              'pagetitle'=>$type . ' Container',
+              'published'=>1,
+              'context_key'=>'web'
       );
     $resource = $modx->newObject('modResource');
     $resource->fromArray($parent,'',true);
